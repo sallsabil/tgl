@@ -4164,6 +4164,39 @@ void tgl_do_delete_msg (struct tgl_state *TLS, tgl_message_id_t *_msg_id, void (
 }
 /* }}} */
 
+/* {{{ Delete history */
+
+static int delete_history_on_answer (struct tgl_state *TLS, struct query *q, void *D) {
+  struct tl_ds_messages_affected_history *DS_MAH = D;
+
+  int r = tgl_check_pts_diff (TLS, DS_LVAL (DS_MAH->pts), DS_LVAL (DS_MAH->pts_count));
+
+  if (r > 0) {
+    bl_do_set_pts (TLS, DS_LVAL (DS_MAH->pts));
+  }
+
+  if (q->callback) {
+    ((void (*)(struct tgl_state *, void *, int))q->callback) (TLS, q->callback_extra, 1);
+  }
+  return 0;
+}
+
+static struct query_methods delete_history_methods = {
+  .on_answer = delete_history_on_answer,
+  .on_error = q_void_on_error,
+  .type = TYPE_TO_PARAM(messages_affected_history)
+};
+
+void tgl_do_delete_history (struct tgl_state *TLS, tgl_peer_id_t peer_id, int offset, void (*callback)(struct tgl_state *TLS, void *callback_extra, int success), void *callback_extra) {
+  clear_packet ();
+  out_int (CODE_messages_delete_history);
+  out_peer_id (TLS, peer_id);
+  out_int (offset);
+
+  tglq_send_query (TLS, TLS->DC_working, packet_ptr - packet_buffer, packet_buffer, &delete_history_methods, 0, callback, callback_extra);
+}
+/* }}} */
+
 /* {{{ Export card */
 
 static int export_card_on_answer (struct tgl_state *TLS, struct query *q, void *D) {

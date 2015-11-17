@@ -386,6 +386,9 @@ void tgl_disable_link_preview (struct tgl_state *TLS);
 void tgl_do_lookup_state (struct tgl_state *TLS);
 
 long long tgl_get_allocated_bytes (void);
+// deletes history *peer*
+void tgl_do_delete_history (struct tgl_state *TLS, tgl_peer_id_t id, int offset, void (*callback)(struct tgl_state *TLS, void *callback_extra, int success), void *callback_extra);
+
 #ifdef __cplusplus
 }
 #endif
